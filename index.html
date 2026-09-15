@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Goal Clock">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Soccer Goal Clock</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0b0f19;color:#fff;min-height:100vh;padding:max(18px,env(safe-area-inset-top)) 16px max(20px,env(safe-area-inset-bottom))}
+.app{max-width:520px;margin:auto}
+h1{font-size:22px;margin:4px 0 16px;text-align:center}
+.segment{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+button{font:inherit;color:#fff;background:#202938;border:1px solid #374151;border-radius:14px;min-height:54px;font-weight:800}
+button.active{background:#fff;color:#111827}
+.display{background:#151c29;border:1px solid #2b3546;border-radius:20px;padding:18px;text-align:center;margin:14px 0}
+.label{font-size:12px;letter-spacing:.09em;color:#aab4c4;font-weight:800}
+.clock{font-size:48px;font-weight:850;letter-spacing:.02em;margin:4px 0 14px;font-variant-numeric:tabular-nums}
+.rule{height:1px;background:#344054;margin:8px 0 16px}
+.result{font-size:64px;line-height:1;font-weight:900;margin:5px 0}
+.minute{font-size:20px;font-weight:900}
+.detail{margin-top:10px;color:#aab4c4;font-size:15px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.pad button{font-size:25px;min-height:62px}
+.pad .utility{font-size:15px}
+.hint{text-align:center;color:#929caf;font-size:13px;margin-top:13px;line-height:1.4}
+.error{color:#ffb4b4;min-height:20px;text-align:center;font-size:14px;margin:8px 0}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>Soccer Goal Minute</h1>
+
+<div class="segment" aria-label="Half length">
+<button id="m45" class="active">45 MIN HALVES</button>
+<button id="m40">40 MIN HALVES</button>
+</div>
+<div class="segment" aria-label="Period">
+<button id="h1" class="active">1ST HALF</button>
+<button id="h2">2ND HALF</button>
+</div>
+
+<section class="display" aria-live="polite">
+<div class="label">SCOREBOARD TIME REMAINING</div>
+<div id="clock" class="clock">--:--</div>
+<div class="rule"></div>
+<div class="label">GOAL SCORED IN THE</div>
+<div id="result" class="result">—</div>
+<div class="minute">MINUTE</div>
+<div id="detail" class="detail">Enter the scoreboard time</div>
+</section>
+
+<div id="error" class="error"></div>
+
+<div class="pad">
+<button data-n="1">1</button><button data-n="2">2</button><button data-n="3">3</button>
+<button data-n="4">4</button><button data-n="5">5</button><button data-n="6">6</button>
+<button data-n="7">7</button><button data-n="8">8</button><button data-n="9">9</button>
+<button id="clear" class="utility">CLEAR</button><button data-n="0">0</button><button id="back" aria-label="Backspace">⌫</button>
+</div>
+<div class="hint">Enter four digits for MM:SS — e.g. <b>4000</b> = 40:00.<br>Second half automatically adds 45 or 40 minutes.</div>
+</main>
+
+<script>
+let halfLength=45, period=1, digits="";
+const $=id=>document.getElementById(id);
+function ordinal(n){let x=n%100;if(x>=11&&x<=13)return n+"th";return n+(n%10===1?"st":n%10===2?"nd":n%10===3?"rd":"th")}
+function select(){
+ $("m45").classList.toggle("active",halfLength===45);
+ $("m40").classList.toggle("active",halfLength===40);
+ $("h1").classList.toggle("active",period===1);
+ $("h2").classList.toggle("active",period===2);
+ calc();
+}
+function calc(){
+ $("error").textContent="";
+ if(!digits){$("clock").textContent="--:--";$("result").textContent="—";$("detail").textContent="Enter the scoreboard time";return}
+ const p=digits.padStart(4,"0"),m=+p.slice(0,2),s=+p.slice(2);
+ $("clock").textContent=p.slice(0,2)+":"+p.slice(2);
+ if(s>59||m>halfLength||(m===halfLength&&s>0)){
+   $("result").textContent="—";$("detail").textContent="Invalid time";
+   $("error").textContent=`Enter ${halfLength}:00 down to 00:00`; return;
+ }
+ const halfElapsed=halfLength*60-(m*60+s);
+ const total=halfElapsed+(period===2?halfLength*60:0);
+ const em=Math.floor(total/60), es=total%60;
+ $("result").textContent=ordinal(em+1);
+ $("detail").textContent=`Elapsed match time: ${em}:${String(es).padStart(2,"0")}`;
+}
+document.querySelectorAll("[data-n]").forEach(b=>b.addEventListener("click",()=>{if(digits.length<4){digits+=b.dataset.n;calc()}}));
+$("clear").onclick=()=>{digits="";calc()};
+$("back").onclick=()=>{digits=digits.slice(0,-1);calc()};
+$("m45").onclick=()=>{halfLength=45;digits="";select()};
+$("m40").onclick=()=>{halfLength=40;digits="";select()};
+$("h1").onclick=()=>{period=1;select()};
+$("h2").onclick=()=>{period=2;select()};
+select();
+</script>
+</body>
+</html>

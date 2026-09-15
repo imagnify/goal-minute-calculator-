@@ -1,0 +1,9 @@
+{
+  "name": "Soccer Goal Minute Calculator",
+  "short_name": "Goal Clock",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#111827",
+  "description": "Offline soccer scoreboard countdown-to-goal-minute calculator for 45- and 40-minute halves."
+}
